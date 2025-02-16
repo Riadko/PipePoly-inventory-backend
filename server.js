@@ -7,7 +7,9 @@ const app = express();
 const { v4: uuidv4 } = require('uuid'); // Import the uuid library
 
 app.use(cors());
-app.use(express.json());
+app.use(express.json({ limit: '50mb' })); // Increase payload size limit
+
+const PORT = process.env.PORT || 5000;
 
 // Get all inventory items
 app.get('/items', async (req, res) => {
@@ -69,18 +71,18 @@ app.post('/items', async (req, res) => {
   }
 });
 
-// Update quantity, name, description, or image_url
+// Update item
 app.put('/items/:qr_code', async (req, res) => {
   try {
     const { qr_code } = req.params;
-    const { quantity } = req.body;
+    const { name, quantity, description, image_url } = req.body;
 
     // Log the received data to confirm it's correctly received
-    console.log('Updating Product:', { qr_code, quantity });
+    console.log('Updating Product:', { qr_code, name, quantity, description, image_url });
 
     const result = await pool.query(
-      'UPDATE inventory SET quantity = $1 WHERE qr_code = $2 RETURNING *',
-      [quantity, qr_code]
+      'UPDATE inventory SET name = $1, quantity = $2, description = $3, image_url = $4 WHERE qr_code = $5 RETURNING *',
+      [name, quantity, description, image_url, qr_code]
     );
 
     // Check if we actually updated anything
@@ -102,10 +104,11 @@ app.delete('/items/:qr_code', async (req, res) => {
     await pool.query('DELETE FROM inventory WHERE qr_code = $1', [qr_code]);
     res.json({ message: 'Item deleted' });
   } catch (err) {
-    console.error(err.message);
+    console.error('Error deleting item:', err.message);
+    res.status(500).json({ error: 'Server error' });
   }
 });
 
-app.listen(5000, () => {
-  console.log('Server running on port 5000');
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
 });

@@ -1,13 +1,21 @@
 const express = require('express');
 const cors = require('cors');
-const pool = require('./db');
+const { Pool } = require('pg');
+const { v4: uuidv4 } = require('uuid'); // Import the uuid library
+require('dotenv').config(); // Load environment variables from .env file
 
 const app = express();
 
-const { v4: uuidv4 } = require('uuid'); // Import the uuid library
-
 app.use(cors());
 app.use(express.json());
+
+// Create a new pool using the DATABASE_URL environment variable
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+  ssl: {
+    rejectUnauthorized: false
+  }
+});
 
 // Get all inventory items
 app.get('/items', async (req, res) => {
@@ -106,6 +114,7 @@ app.delete('/items/:qr_code', async (req, res) => {
   }
 });
 
-app.listen(5000, () => {
-  console.log('Server running on port 5000');
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
 });

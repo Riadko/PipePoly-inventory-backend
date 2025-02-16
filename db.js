@@ -1,12 +1,14 @@
 require('dotenv').config();
 const { Pool } = require('pg');
 
+// Use the connection string from the environment variable
+const connectionString = process.env.DATABASE_URL;
+
 const pool = new Pool({
-  user: process.env.DB_USER,
-  host: process.env.DB_HOST,
-  database: process.env.DB_NAME,
-  password: process.env.DB_PASSWORD,
-  port: process.env.DB_PORT,
+  connectionString: connectionString,
+  ssl: {
+    rejectUnauthorized: false, // Required for Render's PostgreSQL
+  },
 });
 
 module.exports = pool;
